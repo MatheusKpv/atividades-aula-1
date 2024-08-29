@@ -1,14 +1,17 @@
 package jv.triersistemas.atividades.service.impl;
 
 import java.util.List;
+import java.util.Optional;
 
+import jv.triersistemas.atividades.exception.TarefaBadRequestException;
+import jv.triersistemas.atividades.exception.TarefaNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import jv.triersistemas.atividades.model.Tarefa;
-import jv.triersistemas.atividades.model.TarefaDTO;
+import jv.triersistemas.atividades.dto.TarefaDTO;
 import jv.triersistemas.atividades.repository.TarefaRepository;
 import jv.triersistemas.atividades.service.TarefaService;
 
@@ -19,38 +22,30 @@ public class TarefaServiceImpl implements TarefaService {
 	private TarefaRepository tarefaRepository;
 
 	@Override
-	public ResponseEntity<Tarefa> getTarefa(Long id) {
+	public Tarefa getTarefa(Long id) {
 		var tarefa = tarefaRepository.findById(id);
-		if (tarefa.isEmpty()) {
-			return ResponseEntity.notFound().build();
-		}
-		return ResponseEntity.ok(tarefa.get());
+		validaTarefaVazia(tarefa);
+		return tarefa.get();
 	}
 
 	@Override
-	public ResponseEntity<List<Tarefa>> getListaTarefas() {
+	public List<Tarefa> getListaTarefas() {
 		List<Tarefa> tarefas = tarefaRepository.findAll();
-		return ResponseEntity.ok(tarefas);
+		return tarefas;
 	}
 
 	@Override
-	public ResponseEntity<String> cadastraTarefa(TarefaDTO tarefaDTO) {
-		if (tarefaDTO.titulo() == null && tarefaDTO.descricao() == null) {
-			//throw new RuntimeException("Informações insuficiente, favor preencher mais algum campo");
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body("Informações insuficiente, favor preencher mais algum campo");
-		}
-		Tarefa tarefaAtual = new Tarefa(tarefaDTO);
-		tarefaRepository.save(tarefaAtual);
-		return ResponseEntity.ok("Tarefa registrada com sucesso");
+	public Tarefa cadastraTarefa(TarefaDTO tarefaDTO) {
+		validaCadastroTarefa(tarefaDTO);
+		Tarefa tarefa = new Tarefa(tarefaDTO);
+		tarefaRepository.save(tarefa);
+		return tarefa;
 	}
 
 	@Override
-	public ResponseEntity<Tarefa> putTarefa(Long id, TarefaDTO tarefaDTO) {
+	public Tarefa putTarefa(Long id, TarefaDTO tarefaDTO) {
 		var tarefa = tarefaRepository.findById(id);
-		if (tarefa.isEmpty()) {
-			return ResponseEntity.notFound().build();
-		}
+		validaTarefaVazia(tarefa);
 		Tarefa tarefaModificada = tarefa.get();
 		if (tarefaDTO.titulo() != null) {
 			tarefaModificada.setTitulo(tarefaDTO.titulo());
@@ -62,17 +57,26 @@ public class TarefaServiceImpl implements TarefaService {
 			tarefaModificada.setCompleta(tarefaDTO.completa());
 		}
 		tarefaRepository.save(tarefaModificada);
-		return ResponseEntity.ok(tarefaModificada);
+		return tarefaModificada;
 	}
 
 	@Override
-	public ResponseEntity<String> deleteTarefa(Long id) {
+	public void deleteTarefa(Long id) {
 		var tarefa = tarefaRepository.findById(id);
-		if (tarefa.isEmpty()) {
-			return ResponseEntity.notFound().build();
-		}
+		validaTarefaVazia(tarefa);
 		tarefaRepository.delete(tarefa.get());
-		return ResponseEntity.noContent().build();
+	}
+
+	private void validaCadastroTarefa(TarefaDTO tarefaDTO) {
+		if (tarefaDTO.titulo() == null && tarefaDTO.descricao() == null) {
+			throw new TarefaBadRequestException("Informações insuficiente, favor preencher mais algum campo");
+		}
+	}
+
+	private void validaTarefaVazia(Optional<Tarefa> tarefa) {
+		if (tarefa.isEmpty()) {
+			throw new TarefaNotFoundException("Id não encontrado");
+		}
 	}
 
 }
