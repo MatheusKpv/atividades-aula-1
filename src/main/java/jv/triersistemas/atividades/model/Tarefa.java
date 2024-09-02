@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,6 +21,13 @@ public class Tarefa {
 	private String titulo;
 	private String descricao;
 	private Boolean completa;
+
+	@Column(name = "data_criacao")
+	private LocalDate dataCriacao;
+
+	@Column(name = "data_expiracao")
+	private LocalDate dataExpiracao;
+
 	@ManyToOne(cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_categoria")
 	private Categoria categoria;
@@ -27,5 +36,7 @@ public class Tarefa {
 		descricao = tarefaDTO.descricao();
 		completa = tarefaDTO.completa();
 		this.categoria = categoria;
+		this.dataCriacao = LocalDate.now();
+		this.dataExpiracao = tarefaDTO.dataExpiracao();
 	}
 }

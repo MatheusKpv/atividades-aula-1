@@ -13,6 +13,7 @@ import jv.triersistemas.atividades.service.TarefaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -73,6 +74,9 @@ public class TarefaServiceImpl implements TarefaService {
 	private void validaCadastroTarefa(TarefaDTO tarefaDTO) {
 		if (tarefaDTO.titulo() == null && tarefaDTO.descricao() == null) {
 			throw new TarefaBadRequestException("Informações insuficiente, favor preencher mais algum campo");
+		}
+		if (tarefaDTO.dataExpiracao().isBefore(LocalDate.now())) {
+			throw new TarefaBadRequestException("Data de expiração deve ser maior que hoje");
 		}
 	}
 
