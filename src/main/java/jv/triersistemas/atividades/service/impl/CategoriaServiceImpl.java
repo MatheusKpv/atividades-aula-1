@@ -2,9 +2,8 @@ package jv.triersistemas.atividades.service.impl;
 
 import jv.triersistemas.atividades.dto.CategoriaDTO;
 import jv.triersistemas.atividades.dto.CategoriaResponseDTO;
-import jv.triersistemas.atividades.exception.CategoriaBadRequestException;
-import jv.triersistemas.atividades.exception.CategoriaNotFoundException;
-import jv.triersistemas.atividades.exception.TarefaNotFoundException;
+import jv.triersistemas.atividades.exception.BadRequestException;
+import jv.triersistemas.atividades.exception.NotFoundException;
 import jv.triersistemas.atividades.model.Categoria;
 import jv.triersistemas.atividades.repository.CategoriaRepository;
 import jv.triersistemas.atividades.service.CategoriaService;
@@ -12,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CategoriaServiceImpl implements CategoriaService {
@@ -21,7 +19,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     public CategoriaResponseDTO getCategoria(Long id) {
-        var categoria = categoriaRepository.findById(id).orElseThrow(() -> new CategoriaNotFoundException("Id não encontrado"));
+        var categoria = findById(id);
         return new CategoriaResponseDTO(categoria);
     }
 
@@ -41,7 +39,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     public CategoriaResponseDTO putCategoria(Long id, CategoriaDTO categoriaDTO) {
-        var categoria = categoriaRepository.findById(id).orElseThrow(() -> new CategoriaNotFoundException("Id não encontrado"));
+        var categoria = findById(id);
         if (categoriaDTO.nome() != null) {
             categoria.setNome(categoriaDTO.nome());
         }
@@ -57,13 +55,18 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     public void deleteCategoria(Long id) {
-        var categoria = categoriaRepository.findById(id).orElseThrow(() -> new CategoriaNotFoundException("Id não encontrado"));
+        var categoria = findById(id);
         categoriaRepository.delete(categoria);
     }
 
     private void validaCadastroCategoria(CategoriaDTO categoriaDTO) {
         if (categoriaDTO.nome() == null && categoriaDTO.descricao() == null) {
-            throw new CategoriaBadRequestException("Informações insuficiente, favor preencher mais algum campo");
+            throw new BadRequestException("Informações insuficiente, favor preencher mais algum campo");
         }
+    }
+
+    @Override
+    public Categoria findById(Long id) {
+        return categoriaRepository.findById(id).orElseThrow(() -> new NotFoundException("Id da categoria não encontrado"));
     }
 }
